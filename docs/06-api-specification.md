@@ -2763,6 +2763,52 @@ Returns the created `Group` directly (raw).
 
 **Errors:** `400` validation (missing/empty `name` or `participants`, or any non-DTO field) / session not started · `401` missing/invalid `X-API-Key` · `403` key lacks OPERATOR role · `409` conflict or engine not ready (retryable) · `501` not supported on the active engine
 
+#### POST /api/sessions/:sessionId/communities
+
+Create a WhatsApp Community: the parent group plus the announcement group WhatsApp pairs with it,
+with this account as its only member. The create takes **no participants** (Baileys' `communityCreate`
+has none); add members, promote admins, read the roster and fetch the invite code with the `groups`
+routes above, passing the community id as `groupId` — a community id is a group id on the wire.
+Baileys-only.
+
+**Auth:** API key (OPERATOR)
+
+**Path parameters**
+
+| Name      | Type   | Description |
+| --------- | ------ | ----------- |
+| sessionId | string | Session ID  |
+
+**Request body** — `CreateCommunityDto`
+
+| Field       | Type   | Required | Constraints                               | Description                                  |
+| ----------- | ------ | -------- | ----------------------------------------- | -------------------------------------------- |
+| name        | string | Yes      | `@IsString`, `@IsNotEmpty`, 1..100 chars  | Community name                               |
+| description | string | No       | `@IsString`, up to 1024 chars             | Community description, shown on its page     |
+
+```json
+{
+  "name": "Neighbourhood",
+  "description": "Street news and alerts"
+}
+```
+
+**Response** `201`
+
+Returns the created community as a `Group` summary directly (raw).
+
+```json
+{
+  "id": "120363999999999999@g.us",
+  "name": "Neighbourhood",
+  "participantsCount": 1,
+  "isAdmin": true,
+  "linkedParentJID": null
+}
+```
+
+**Errors:** `400` session is not started, or the body failed validation · `401` missing/invalid `X-API-Key` · `403` key lacks OPERATOR role, or WhatsApp refused the creation · `409` engine not ready (retryable) · `501` not supported by the active engine (whatsapp-web.js has no community API) · `503` the engine returned no metadata for the community it may have created — check the account's community list before retrying, a retry can create a second community
+
 #### POST /api/sessions/:sessionId/groups/:groupId/participants
 
 Add participants to a group.

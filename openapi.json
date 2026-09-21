@@ -6092,6 +6092,64 @@
         ]
       }
     },
+    "/api/sessions/{sessionId}/communities": {
+      "post": {
+        "description": "Creates the community and the announcement group WhatsApp pairs with it, with this account as its only member. A community id is a group id on the wire: add members, promote admins, read the roster and fetch the invite code with the `groups` routes, passing the community id as `groupId`. Baileys-only.",
+        "operationId": "CommunityController_create",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "description": "Session ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommunityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Community created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupSummaryDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Session not started, or the body failed validation"
+          },
+          "403": {
+            "description": "WhatsApp refused the operation. The request was well formed — the refusal happened WhatsApp-side, most often because the account lacks the admin rights the operation requires."
+          },
+          "409": {
+            "description": "The session is not connected — an engine exists for it but is not `ready`: disconnected, reconnecting, or still initializing, so the request never reached WhatsApp. Wait for `ready` and retry. A session that was never started answers `400` instead, and the session lifecycle routes answer `409` for a conflicting state rather than this. One window answers this while the session still reads `ready`: WhatsApp Web periodically reloads its own page and the engine re-injects into it — for those few seconds the answer is a `409` naming the reload; retry shortly."
+          },
+          "501": {
+            "description": "Not supported by the active engine: whatsapp-web.js has no community API, so this route is Baileys-only."
+          },
+          "503": {
+            "description": "The engine returned no metadata for the community it may have created. Baileys swallows its own parse failure and answers null; check the account's community list before retrying, since a retry can create a second community."
+          }
+        },
+        "summary": "Create a WhatsApp Community",
+        "tags": [
+          "communities"
+        ]
+      }
+    },
     "/api/sessions/{sessionId}/profile/name": {
       "put": {
         "operationId": "ProfileController_setName",
@@ -15145,6 +15203,26 @@
           "inviteCode",
           "inviteLink",
           "message"
+        ]
+      },
+      "CreateCommunityDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Community name",
+            "maxLength": 100,
+            "example": "Neighbourhood"
+          },
+          "description": {
+            "type": "string",
+            "description": "Community description, shown on the community page",
+            "maxLength": 1024,
+            "example": "Street news and alerts"
+          }
+        },
+        "required": [
+          "name"
         ]
       },
       "SetProfileNameDto": {

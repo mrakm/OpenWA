@@ -15,7 +15,9 @@ export class CreateCommunityDto {
   name!: string;
 
   @ApiPropertyOptional({
-    description: 'Community description, shown on the community page',
+    description:
+      'Community description, shown on the community page. Defaults to the name when omitted or blank: ' +
+      'WhatsApp silently creates nothing for an empty description.',
     maxLength: GROUP_DESCRIPTION_MAX_LENGTH,
     example: 'Street news and alerts',
   })

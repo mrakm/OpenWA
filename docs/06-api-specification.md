@@ -2784,7 +2784,7 @@ Baileys-only.
 | Field       | Type   | Required | Constraints                               | Description                                  |
 | ----------- | ------ | -------- | ----------------------------------------- | -------------------------------------------- |
 | name        | string | Yes      | `@IsString`, `@IsNotEmpty`, 1..100 chars  | Community name                               |
-| description | string | No       | `@IsString`, up to 1024 chars             | Community description, shown on its page     |
+| description | string | No       | `@IsString`, up to 1024 chars             | Community description, shown on its page; defaults to the name when omitted or blank (WhatsApp creates nothing for an empty one) |
 
 ```json
 {

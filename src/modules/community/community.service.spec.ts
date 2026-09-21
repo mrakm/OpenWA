@@ -14,12 +14,21 @@ describe('CommunityService', () => {
     await expect(makeService().createCommunity('s1', 'N', '')).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('delegates to the engine and returns what it says, defaulting the description to empty', async () => {
+  it('delegates to the engine and returns what it says', async () => {
     const createCommunity = jest.fn().mockResolvedValue({ id: '1203@g.us', name: 'N' });
-    await expect(makeService({ createCommunity }).createCommunity('s1', 'N')).resolves.toEqual({
+    await expect(makeService({ createCommunity }).createCommunity('s1', 'N', 'D')).resolves.toEqual({
       id: '1203@g.us',
       name: 'N',
     });
-    expect(createCommunity).toHaveBeenCalledWith('N', '');
+    expect(createCommunity).toHaveBeenCalledWith('N', 'D');
   });
+
+  it.each([undefined, '', '   '])(
+    'defaults an empty description (%p) to the name — WhatsApp creates nothing otherwise',
+    async d => {
+      const createCommunity = jest.fn().mockResolvedValue({ id: '1203@g.us', name: 'N' });
+      await makeService({ createCommunity }).createCommunity('s1', 'N', d);
+      expect(createCommunity).toHaveBeenCalledWith('N', 'N');
+    },
+  );
 });

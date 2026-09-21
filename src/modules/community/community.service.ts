@@ -16,7 +16,13 @@ export class CommunityService {
     return this.engines.require(sessionId);
   }
 
-  async createCommunity(sessionId: string, name: string, description = '') {
-    return this.getEngine(sessionId).createCommunity(name, description);
+  /**
+   * An EMPTY description is defaulted to the name. Measured live on Baileys 7.0.0-rc14: with an empty
+   * `<description><body>` WhatsApp answers the create IQ without a `<group>` node, Baileys resolves
+   * null, and nothing is created — the same account creates fine the moment the body has text.
+   */
+  async createCommunity(sessionId: string, name: string, description?: string) {
+    const body = description?.trim() ? description : name;
+    return this.getEngine(sessionId).createCommunity(name, body);
   }
 }

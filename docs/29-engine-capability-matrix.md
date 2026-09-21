@@ -3,7 +3,7 @@
 Three-way comparison of every capability: the **Baileys library** (`@whiskeysockets/baileys`
 7.0.0-rc14), the **whatsapp-web.js library** (1.34.7), and what **OpenWA actually exposes** through
 its adapter layer and REST API — including which "supported" cells only work because OpenWA patches
-the installed library. Coverage is total: all 112 `IWhatsAppEngine` methods (29.4), **all 152
+the installed library. Coverage is total: all 113 `IWhatsAppEngine` methods (29.4), **all 152
 Baileys + 81 whatsapp-web.js library methods** (29.5), all 34 + 31 library events (29.5.4), and all
 9 install-time patches (29.3). If it exists upstream or in OpenWA, it has a row here.
 
@@ -25,7 +25,7 @@ Statuses used in the tables:
 
 Two complementary views:
 
-- **29.4 — the OpenWA contract view.** Rows are the 112 `IWhatsAppEngine` methods; use it to see
+- **29.4 — the OpenWA contract view.** Rows are the 113 `IWhatsAppEngine` methods; use it to see
   what a REST caller gets per engine. Source of truth: `src/engine/engine-capability-matrix.ts`
   (per-cell `evidence` strings cite the exact library `file:symbol` inspected).
 - **29.5 — the full engine inventory.** Rows are **every method the installed libraries expose**,
@@ -37,14 +37,14 @@ Two complementary views:
 ## 29.2 Adapter architecture
 
 OpenWA never calls a WhatsApp library directly from a controller. Every session owns one engine
-instance behind the neutral `IWhatsAppEngine` interface (112 methods +
+instance behind the neutral `IWhatsAppEngine` interface (113 methods +
 `EngineEventCallbacks`), and all modules go through it:
 
 ```mermaid
 flowchart LR
     subgraph OpenWA["OpenWA"]
         API["REST API controllers"] --> SVC["Modules / services"]
-        SVC --> IF["IWhatsAppEngine - 112 methods"]
+        SVC --> IF["IWhatsAppEngine - 113 methods"]
         IF --> WA["WhatsAppWebJsAdapter"]
         IF --> BA["BaileysAdapter"]
         SVC --> STORE["OpenWA-side stores"]
@@ -203,7 +203,7 @@ opens `if (!channel) return false;` before its try, so its `false` conflates _ch
 _WhatsApp refused_, and the adapter answers 403 for both. That distinction is ours to make in our own
 adapter and involves no library change.
 
-## 29.4 Full capability matrix — the OpenWA contract view (112 methods)
+## 29.4 Full capability matrix — the OpenWA contract view (113 methods)
 
 Legend recap: **✅** supported · **✅🔧ⁿ** supported via OpenWA patch `🔧ⁿ` (29.3) ·
 **❌ gap** adapter-gap · **❌ lib** library-limitation. Column headers carry the engine-wide
@@ -301,6 +301,7 @@ socket is caught by the transport instead. No REST route: the session watchdog p
 | Method                           | Baileys adapter 🔧⁵ | wwjs adapter 🔧¹ | OpenWA REST     |
 | -------------------------------- | ------------------- | ---------------- | --------------- |
 | `createGroup`                    | ✅                  | ❌ lib           | ⚠️ baileys only |
+| `createCommunity`                | ✅                  | ❌ lib           | ⚠️ baileys only |
 | `getGroups`                      | ✅                  | ✅               | ✅              |
 | `getGroupInfo`                   | ✅                  | ✅               | ✅              |
 | `addParticipants`                | ✅                  | ✅               | ✅              |
@@ -395,9 +396,9 @@ answers 501.
 | `rejectCall`          | ✅                  | ❌ lib           | ⚠️ baileys only |
 | `createCallLink`      | ✅                  | ✅               | ✅              |
 
-**Totals:** 112 methods → 224 adapter cells: **198 ✅, 26 ❌** (2 adapter-gaps, 24
-library-limitations, 0 uncertain) across 25 methods. From the REST caller's side: **89** methods
-work on any engine (87 fully supported + 2 store-backed status reads), **13** are Baileys-only,
+**Totals:** 113 methods → 226 adapter cells: **199 ✅, 27 ❌** (2 adapter-gaps, 25
+library-limitations, 0 uncertain) across 26 methods. From the REST caller's side: **89** methods
+work on any engine (87 fully supported + 2 store-backed status reads), **14** are Baileys-only,
 **9** are wwjs-only (the 2 store-backed rows excluded); `sendCatalog`, unavailable on both engines,
 is not exposed.
 
@@ -474,14 +475,15 @@ Exposure column values:
 | `groupUpdateDescription`         | ✅ `setGroupDescription`                                                                |
 | `groupUpdateSubject`             | ✅ `setGroupSubject`                                                                    |
 
-**Communities** (23) — the largest single gap: an entire WhatsApp feature area (groups-of-groups)
-with zero OpenWA surface. Baileys-only; whatsapp-web.js has no community API at all.
+**Communities** (23) — 1 wired (`communityCreate` → `createCommunity`; adds, promotes, metadata and
+invite code of a community go through the group methods, whose w:g2 IQ is identical), 22 still the
+largest single gap. Baileys-only; whatsapp-web.js has no community API at all.
 
 | Library method                       | OpenWA exposure    |
 | ------------------------------------ | ------------------ |
 | `communityAcceptInvite`              | ❌ **not exposed** |
 | `communityAcceptInviteV4`            | ❌ **not exposed** |
-| `communityCreate`                    | ❌ **not exposed** |
+| `communityCreate`                    | ✅ `createCommunity` |
 | `communityCreateGroup`               | ❌ **not exposed** |
 | `communityFetchAllParticipating`     | ❌ **not exposed** |
 | `communityFetchLinkedGroups`         | ❌ **not exposed** |
@@ -835,7 +837,7 @@ OpenWA consumes events by normalizing them into `EngineEventCallbacks`; anything
 | `group_leave`               | ✅           |     | `group_update`         | ✅                                                                              |
 | `group_membership_request`  | ✅           |     |                        |                                                                                 |
 
-## 29.6 The 26 not-available cells in detail
+## 29.6 The 27 not-available cells in detail
 
 Every ❌ in 29.4, with the exact library symbol inspected (full evidence strings:
 `engine-capability-matrix.ts`). All of these throw `EngineNotSupportedError` → HTTP 501 at the
@@ -858,12 +860,13 @@ adapter boundary — none silently stubs.
 | `sendCatalog`           | lib   | `AnyMessageContent` (`Types/Message.d.ts:166-210`) has only `{product}` (single product); the catalog CRUD nodes (`Socket/business.js:294-362`) mutate the catalog, they don't send it.                                                                                                                                                                  |
 | `votePoll`              | lib   | No vote-send helper at all; the library only _decrypts incoming_ votes (`decryptPollVote`). Sending needs a hand-built `proto.Message.PollUpdateMessage` with HMAC-SHA256 encryption keyed by the poll creation's `messageSecret`.                                                                                                                       |
 
-### 29.6.2 wwjs adapter (14 cells)
+### 29.6.2 wwjs adapter (15 cells)
 
 | Method                     | Cause | What's missing (evidence)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | -------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `subscribeToChannel`       | gap   | `Client.subscribeToChannel(channelId)` (`Client.js:2542`) takes a channel **id** and resolves a boolean — it cannot satisfy the subscribe-by-invite-code contract alone. Correct wiring is two-step: `getChannelByInviteCode(inviteCode)` (`Client.js:1716`) → `subscribeToChannel(channel.id)`, unverified against a live session (the previous one-step call was a phantom success). The one remaining wwjs adapter-gap.                                                                                                                                                                                                                                                                                                                     |
 | `createGroup`              | lib   | `Client.createGroup` exists and is typed `Promise<CreateGroupResult \| string>`, but its injected evaluate reaches a WhatsApp Web internal that no longer exposes `findImpl` (`Client.js:2325`). Measured live on **two** builds — `2.3000.1044858477-alpha` auto-resolved and `2.3000.1044770897-alpha` pinned — both `TypeError: this.findImpl is not a function`, reaching the caller as a bare 500. Bare and `@c.us`-qualified participant ids fail identically, so the id shape is not the variable; varying the build is what separates this from registry pin drift. `findImpl` is in neither the installed `Client.js` nor any OpenWA patcher, so it belongs to the page and cannot be patched around. Baileys serves this capability. |
+| `createCommunity`          | lib   | whatsapp-web.js `Client` exposes no community method at all (29.5.2 lists none), so there is nothing to wire. Baileys serves this capability through `communityCreate`. |
 | `demoteChannelAdmin`       | lib   | `Client.demoteChannelAdmin` exists (`index.d.ts:35`) but its page body calls `window.require('WAWebDemoteNewsletterAdminAction').demoteNewsletterAdmin` (`Client.js:1907-1925`), and a module probe on a live session (Web `2.3000.1044824727-alpha`, unpinned) returned that module resolving with `demoteNewsletterAdmin: undefined`. The sibling path used inside `transferChannelOwnership` (`WAWebNewsletterDemoteAdminJob.demoteNewsletterAdminAction`) is undefined too, so there is nothing to retarget. Baileys serves this capability.                                                                                                                                                                                               |
 | `transferChannelOwnership` | lib   | `Client.transferChannelOwnership` exists (`index.d.ts:375`) and its page function `WAWebChangeNewsletterOwnerAction.changeNewsletterOwnerAction` is present, but on Web `2.3000.1044824727-alpha` it rejects every call **locally** with `contact-not-found-in-newsletter-subscriber-list` — 4-9ms against a 352-531ms known-server baseline measured in the same page, so it never reaches WhatsApp. Unchanged by subscribing the target, promoting it to admin, or restarting the session; the only repopulation path, `WAWebCollections.NewsletterMetadataCollection.update`, is `undefined`. Baileys serves this capability.                                                                                                               |
 | `upsertLabel`              | lib   | 1.34.7 reads labels and assigns them (`getLabels`, `getLabelById`, `getChatLabels`, `getChatsByLabelId`, `addOrRemoveLabels`, `index.d.ts:129-154`) but exposes nothing that creates/edits a label definition.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -957,19 +960,19 @@ adapter boundary — none silently stubs.
 Recomputed from `engine-capability-matrix.ts`, `upstream-surface.snapshot.json`, and a scan of the
 adapter sources — re-derive the same way when anything changes:
 
-- **112** interface methods → **224** adapter cells: **198 ✅** / **26 ❌** (2 adapter-gaps, 24
-  library-limitations, 0 uncertain), spanning **25** methods.
-- Of the 198 ✅ cells, **10 wwjs cells carry an explicit patch dependency** (4 × 🔧² status send,
+- **113** interface methods → **226** adapter cells: **199 ✅** / **27 ❌** (2 adapter-gaps, 25
+  library-limitations, 0 uncertain), spanning **26** methods.
+- Of the 199 ✅ cells, **10 wwjs cells carry an explicit patch dependency** (4 × 🔧² status send,
   1 × 🔧³ channel link preview, 1 × 🔧⁴ ready-sync, 3 × 🔧⁷ participant arity, 1 × 🔧⁹ group
   description) and one baileys cell
   does (1 × 🔧⁶ newsletter-create parse); the whole wwjs column additionally
   depends on 🔧¹, the whole Baileys column on 🔧⁵ — so every row rests on a patch on each side,
   even though no row carries a row-level mark on both.
-- REST caller's view: **89** engine-neutral (87 + 2 store-backed status reads), **13** Baileys-only,
+- REST caller's view: **89** engine-neutral (87 + 2 store-backed status reads), **14** Baileys-only,
   **9** wwjs-only; `sendCatalog` (unavailable on both engines) is not exposed.
 - Full engine inventory (29.5), split by the exposure legend rather than lumped: Baileys **152**
-  socket methods — 48 wired into interface methods, 5 internal wiring, 29 plumbing, **70 ❌ not
-  exposed** (incl. the whole 23-method community cluster); wwjs **81** Client methods — 43 wired,
+  socket methods — 49 wired into interface methods, 5 internal wiring, 29 plumbing, **69 ❌ not
+  exposed** (incl. 22 of the 23-method community cluster); wwjs **81** Client methods — 43 wired,
   3 internal wiring, 1 class plumbing, **34 ❌ not exposed** (26 real capabilities + 8
   session/transport settings that are not WhatsApp capabilities). The backlog is the ❌ rows minus
   those 8 settings; 🔩 plumbing is correctly never exposed.

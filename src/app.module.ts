@@ -24,6 +24,7 @@ import { InfraModule } from './modules/infra/infra.module';
 import { EventsModule } from './modules/events/events.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { GroupModule } from './modules/group/group.module';
+import { CommunityModule } from './modules/community/community.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { CallModule } from './modules/call/call.module';
 import { LabelModule } from './modules/label/label.module';
@@ -300,6 +301,7 @@ if (dashboardServingEnabled && dashboardBuildPresent) {
     InfraModule,
     ContactModule,
     GroupModule,
+    CommunityModule,
     ProfileModule, // Own-profile API (name / status / picture)
     CallModule, // Incoming-call API (reject a ringing call)
     LabelModule, // Phase 3: Labels Management

@@ -224,6 +224,13 @@ export interface Group {
   isAdmin?: boolean;
   /** JID of the parent community this group is linked to, or null if standalone. */
   linkedParentJID?: string | null;
+  /**
+   * For a COMMUNITY (set by createCommunity): the id of its announcement group, which is where the
+   * community's members live. WhatsApp rejects a participant add on the parent id as bad-request
+   * (measured live) and accepts it on this id; use it for add/promote/roster. Absent when the
+   * lookup after creation failed — the community still exists.
+   */
+  announcementGroupId?: string;
 }
 
 export interface GroupParticipant {

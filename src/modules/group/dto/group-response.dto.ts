@@ -46,6 +46,15 @@ export class GroupSummaryDto {
     example: null,
   })
   linkedParentJID?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'For a community created with POST /communities: the id of its announcement group, where the ' +
+      "community's members live. Use it as `groupId` for participant, roster and promote routes — WhatsApp " +
+      'rejects a participant add on the parent id. Absent when the lookup after creation failed.',
+    example: '120363000000000001@g.us',
+  })
+  announcementGroupId?: string;
 }
 
 /**

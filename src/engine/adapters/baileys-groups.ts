@@ -229,7 +229,43 @@ export class BaileysGroups {
         'WhatsApp did not confirm the community creation — the engine returned no metadata',
       );
     }
-    return mapBaileysGroup(metadata, this.host.normalizedSelfJid(), jid => this.host.toNeutralJid(jid));
+    const summary = mapBaileysGroup(metadata, this.host.normalizedSelfJid(), jid => this.host.toNeutralJid(jid));
+    const announcementGroupId = await this.findAnnouncementGroup(metadata.id, metadata.subject);
+    return announcementGroupId ? { ...summary, announcementGroupId } : summary;
+  }
+
+  /**
+   * The announcement group is where a community's members live: WhatsApp answers a participant add
+   * on the PARENT id with bad-request (measured live on 7.0.0-rc14) and accepts it on the linked
+   * sub-group it flags `default_sub_group` (Baileys: isCommunityAnnounce). WhatsApp creates that group
+   * with the community's subject, which is the fallback when the flag is not reported. Best effort:
+   * the community exists whether or not this lookup succeeds, so a failure is logged and reported
+   * as an absent id rather than as a failed create — a retry would make a second community.
+   */
+  private async findAnnouncementGroup(communityId: string, subject: string): Promise<string | undefined> {
+    try {
+      const linked = await withQueryDeadline(
+        this.sock().communityFetchLinkedGroups(communityId),
+        this.queryBudgetMs,
+        'WhatsApp did not answer the linked-groups query in time',
+      );
+      const candidates = linked.linkedGroups.filter((g): g is typeof g & { id: string } => typeof g.id === 'string');
+      for (const g of candidates) {
+        const meta = await withQueryDeadline(
+          this.sock().groupMetadata(g.id),
+          this.queryBudgetMs,
+          'WhatsApp did not answer the sub-group metadata query in time',
+        );
+        if (meta.isCommunityAnnounce) return meta.id;
+      }
+      return candidates.find(g => g.subject === subject)?.id;
+    } catch (err) {
+      this.host.logger.warn('community created but its announcement group could not be resolved', {
+        communityId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return undefined;
+    }
   }
 
   async addParticipants(groupId: string, participants: string[]): Promise<ParticipantOperationResult[]> {

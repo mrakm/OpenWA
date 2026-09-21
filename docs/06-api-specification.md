@@ -2795,7 +2795,11 @@ Baileys-only.
 
 **Response** `201`
 
-Returns the created community as a `Group` summary directly (raw).
+Returns the created community as a `Group` summary directly (raw). `announcementGroupId` is the id to
+use as `groupId` on the participant, promote and roster routes: a community's members live in its
+announcement group, and WhatsApp rejects a participant add on the parent id as bad-request. It is
+absent when the lookup after creation failed (the community still exists; find the sub-group named
+after the community in `GET /sessions/:sessionId/groups`, `linkedParentJID` = the community id).
 
 ```json
 {
@@ -2803,7 +2807,8 @@ Returns the created community as a `Group` summary directly (raw).
   "name": "Neighbourhood",
   "participantsCount": 1,
   "isAdmin": true,
-  "linkedParentJID": null
+  "linkedParentJID": null,
+  "announcementGroupId": "120363000000000001@g.us"
 }
 ```
 

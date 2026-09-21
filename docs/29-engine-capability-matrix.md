@@ -475,9 +475,9 @@ Exposure column values:
 | `groupUpdateDescription`         | ✅ `setGroupDescription`                                                                |
 | `groupUpdateSubject`             | ✅ `setGroupSubject`                                                                    |
 
-**Communities** (23) — 1 wired (`communityCreate` → `createCommunity`; adds, promotes, metadata and
-invite code of a community go through the group methods, whose w:g2 IQ is identical), 22 still the
-largest single gap. Baileys-only; whatsapp-web.js has no community API at all.
+**Communities** (23) — 2 wired (`communityCreate` and `communityFetchLinkedGroups` → `createCommunity`,
+which resolves the announcement group; adds, promotes, metadata and invite code then go through the
+group methods on that announcement-group id), 21 still the largest single gap. Baileys-only; whatsapp-web.js has no community API at all.
 
 | Library method                       | OpenWA exposure    |
 | ------------------------------------ | ------------------ |
@@ -486,7 +486,7 @@ largest single gap. Baileys-only; whatsapp-web.js has no community API at all.
 | `communityCreate`                    | ✅ `createCommunity` |
 | `communityCreateGroup`               | ❌ **not exposed** |
 | `communityFetchAllParticipating`     | ❌ **not exposed** |
-| `communityFetchLinkedGroups`         | ❌ **not exposed** |
+| `communityFetchLinkedGroups`         | ✅ `createCommunity` |
 | `communityGetInviteInfo`             | ❌ **not exposed** |
 | `communityInviteCode`                | ❌ **not exposed** |
 | `communityJoinApprovalMode`          | ❌ **not exposed** |
@@ -971,8 +971,8 @@ adapter sources — re-derive the same way when anything changes:
 - REST caller's view: **89** engine-neutral (87 + 2 store-backed status reads), **14** Baileys-only,
   **9** wwjs-only; `sendCatalog` (unavailable on both engines) is not exposed.
 - Full engine inventory (29.5), split by the exposure legend rather than lumped: Baileys **152**
-  socket methods — 49 wired into interface methods, 5 internal wiring, 29 plumbing, **69 ❌ not
-  exposed** (incl. 22 of the 23-method community cluster); wwjs **81** Client methods — 43 wired,
+  socket methods — 50 wired into interface methods, 5 internal wiring, 29 plumbing, **68 ❌ not
+  exposed** (incl. 21 of the 23-method community cluster); wwjs **81** Client methods — 43 wired,
   3 internal wiring, 1 class plumbing, **34 ❌ not exposed** (26 real capabilities + 8
   session/transport settings that are not WhatsApp capabilities). The backlog is the ❌ rows minus
   those 8 settings; 🔩 plumbing is correctly never exposed.

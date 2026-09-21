@@ -181,6 +181,13 @@ export class WwebjsGroups {
     throw new EngineNotSupportedError('createGroup');
   }
 
+  /** whatsapp-web.js exposes no community method at all (docs/29 §29.5.2), so this is library-limited. */
+  /* eslint-disable-next-line @typescript-eslint/require-await, @typescript-eslint/no-unused-vars */
+  async createCommunity(_name: string, _description: string): Promise<Group> {
+    this.host.ensureReady();
+    throw new EngineNotSupportedError('createCommunity');
+  }
+
   async addParticipants(groupId: string, participants: string[]): Promise<ParticipantOperationResult[]> {
     const chat = await this.requireGroupChat(groupId);
     const participantIds = participants.map(toParticipantWid);

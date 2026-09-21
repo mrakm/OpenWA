@@ -214,6 +214,24 @@ export class BaileysGroups {
     return mapBaileysGroup(metadata, this.host.normalizedSelfJid(), jid => this.host.toNeutralJid(jid));
   }
 
+  /**
+   * Same deadline rule as createGroup (non-idempotent, so no 503-shaped timeout). One extra guard:
+   * Baileys' communityCreate resolves NULL when its own metadata parse fails instead of throwing
+   * (Socket/communities.js parseGroupResult), and null must not be sold to the caller as a community.
+   */
+  async createCommunity(name: string, description: string): Promise<Group> {
+    this.host.ensureReady();
+    const metadata = await mapServerRefusal('Creating the community', () =>
+      this.sock().communityCreate(name, description),
+    );
+    if (!metadata) {
+      throw new EngineTransportError(
+        'WhatsApp did not confirm the community creation — the engine returned no metadata',
+      );
+    }
+    return mapBaileysGroup(metadata, this.host.normalizedSelfJid(), jid => this.host.toNeutralJid(jid));
+  }
+
   async addParticipants(groupId: string, participants: string[]): Promise<ParticipantOperationResult[]> {
     return this.runParticipantsUpdate(groupId, participants, 'add');
   }

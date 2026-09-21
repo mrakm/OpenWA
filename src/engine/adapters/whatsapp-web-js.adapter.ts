@@ -626,6 +626,10 @@ export class WhatsAppWebJsAdapter extends EventEmitter implements IWhatsAppEngin
     return this.groups.createGroup(name, participants);
   }
 
+  createCommunity(name: string, description: string): Promise<Group> {
+    return this.groups.createCommunity(name, description);
+  }
+
   addParticipants(groupId: string, participants: string[]): Promise<ParticipantOperationResult[]> {
     return this.groups.addParticipants(groupId, participants);
   }

@@ -131,6 +131,12 @@ export const CURATED_CAPABILITY_EXCEPTIONS: Record<string, MethodCapability> = {
     evidence:
       'baileys groupCreate(subject, participants) → GroupMetadata (Socket/groups.d.ts). wwjs Client.createGroup exists and is typed Promise<CreateGroupResult | string> (index.d.ts) but its injected evaluate reaches a WhatsApp Web internal that no longer exposes findImpl (Client.js:2325) — measured live on TWO builds, 2.3000.1044858477-alpha auto-resolved and 2.3000.1044770897-alpha pinned, both TypeError "this.findImpl is not a function" reaching the caller as a bare 500. Bare and @c.us-qualified participant ids fail identically, so the id shape is not the variable, and varying the build is what separates this from registry pin drift. findImpl appears in neither the installed Client.js nor any OpenWA patcher, so it is the page\'s, not the library\'s, and cannot be patched around. Baileys creates groups normally on the same account',
   },
+  createCommunity: {
+    wwjs: { status: 'not-available', rootCause: 'library-limitation' },
+    baileys: { status: 'supported' },
+    evidence:
+      'baileys communityCreate(subject, body) → GroupMetadata | null (Socket/communities.d.ts:6); the delegate treats null as EngineTransportError because parseGroupResult swallows its own errors. whatsapp-web.js Client has no community method of any kind (docs/29 §29.5.2 lists none), so nothing can be wired',
+  },
   deleteContact: {
     wwjs: { status: 'supported' },
     baileys: { status: 'supported' },

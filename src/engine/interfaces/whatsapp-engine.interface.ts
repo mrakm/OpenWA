@@ -1125,6 +1125,15 @@ export interface GroupCapability {
   createGroup(name: string, participants: string[]): Promise<Group>;
 
   /**
+   * Create a WhatsApp Community: a parent group that WhatsApp pairs with an announcement group.
+   * Takes NO participants — Baileys' `communityCreate` has none — so callers add them afterwards
+   * with {@link addParticipants} on the returned id. A community id is a group id on the wire:
+   * every participant, metadata and invite operation in this interface accepts it unchanged
+   * (Baileys' own `communityFetchLinkedGroups` reads a community through `groupMetadata`).
+   */
+  createCommunity(name: string, description: string): Promise<Group>;
+
+  /**
    * Membership writes resolve one {@link ParticipantOperationResult} per participant, so a partial
    * refusal (one invite-only number among several added) is visible instead of being flattened into
    * a blanket success. They THROW only when the operation failed for every requested participant —

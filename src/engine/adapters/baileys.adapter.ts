@@ -367,6 +367,10 @@ export class BaileysAdapter implements IWhatsAppEngine {
     return this.groups.createGroup(name, participants);
   }
 
+  createCommunity(name: string, description: string): Promise<Group> {
+    return this.groups.createCommunity(name, description);
+  }
+
   async addParticipants(groupId: string, participants: string[]): Promise<ParticipantOperationResult[]> {
     return this.groups.addParticipants(groupId, participants);
   }
